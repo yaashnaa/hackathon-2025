@@ -1,7 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Italianno&display=swap');
 :root {
   --text: #091716;
   --background: #fbfbfb;
   --primary: #5faaa3;
   --secondary: #9fbed7;
   --accent: #7d9ec9;
+  --mainfont: "Quicksand", serif;
+  --headingFont: "Italianno", serif;
+  --secondaryFont: "David Libre", serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
 }

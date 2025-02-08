@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import "../styles/landingPage.css";
-import NightImage from "../assets/night.jpg";
-import HeartRate from "../assets/heartRate.jpg";
-import MorningImg from "../assets/morning.jpg";
+import '../App.css';
+import NightImage from "../assets/night-removebg-preview.png";
+import HeartRate from "../assets/heartRate-removebg-preview.png";
+import MorningImg from "../assets/morning-removebg-preview.png";
 export default function ZenPose() {
   const [gameStarted, setGameStarted] = useState(false);
 
@@ -15,13 +16,11 @@ export default function ZenPose() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        background: "linear-gradient(to right, #6a11cb, #2575fc)",
-        color: "white",
         padding: "20px",
       }}
     >
       <motion.h1
-        style={{ fontSize: "3rem", fontWeight: "bold", marginBottom: "20px" }}
+        style={{ fontSize: "6rem", fontWeight: "bold", marginBottom: "20px" }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -44,17 +43,29 @@ export default function ZenPose() {
         <div className="button-81">
           <div className="options-image">
             Morning Revival
-            <img src={MorningImg} alt="Yoga pose" />
+            <div className="image-container">
+              <img src={MorningImg} alt="Yoga pose" />
+            </div>
           </div>
         </div>
         <div className="button-81">
           {" "}
           <div className="options-image">
             HeartRate Revival
-            <img src={HeartRate} alt="Yoga pose" />
+            <div className="image-container">
+              <img src={HeartRate} alt="Yoga pose" />
+            </div>
           </div>
         </div>
-        <div className="button-81">Wind down</div>
+        <div className="button-81">
+          <div className="options-image">
+          Wind down
+            <div className="image-container">
+              <img src={NightImage} alt="Yoga pose" />
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* <motion.button
