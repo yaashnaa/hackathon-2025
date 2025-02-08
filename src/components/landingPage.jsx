@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import "../styles/landingPage.css";
-import '../App.css';
+import "../App.css";
 import NightImage from "../assets/night-removebg-preview.png";
 import HeartRate from "../assets/heartRate-removebg-preview.png";
 import MorningImg from "../assets/morning-removebg-preview.png";
@@ -20,21 +20,14 @@ export default function ZenPose() {
       }}
     >
       <motion.h1
-        style={{ fontSize: "6rem", fontWeight: "bold", marginBottom: "20px" }}
+        style={{ fontSize: "7rem", fontWeight: "bold", marginBottom: "20px" }}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
         ZenPose
       </motion.h1>
-      <p
-        style={{
-          fontSize: "1.2rem",
-          textAlign: "center",
-          maxWidth: "600px",
-          marginBottom: "20px",
-        }}
-      >
+      <p>
         Test your yoga skills! Complete as many yoga poses as possible in{" "}
         <strong>one minute</strong> to earn points. The AI will track your poses
         and score you in real-time.
@@ -59,12 +52,11 @@ export default function ZenPose() {
         </div>
         <div className="button-81">
           <div className="options-image">
-          Wind down
+            Wind down
             <div className="image-container">
               <img src={NightImage} alt="Yoga pose" />
             </div>
           </div>
-
         </div>
       </div>
 

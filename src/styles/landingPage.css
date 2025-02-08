@@ -1,4 +1,35 @@
 
+
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 100%;
+    font-family: var(--mainfont);
+    overflow: hidden;
+  }
+body{
+    background-image: linear-gradient(-45deg, #7498f4, #9395eb, #23a6d5, #23d5ab);
+    color: black;
+    background-size: 200% 200%;
+    animation: gradient 10s ease infinite;
+}
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+h1{
+    font-family: var(--headingFont);
+    text-shadow: -3px 3px 4px rgba(255,255,255,0.63);
+}
 .options{
     display: flex;
     align-items: center;
@@ -6,20 +37,8 @@
     gap: 1.2rem;
     margin-top: 2rem;
     max-width: 80vw;
-}
-html, body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    width: 100vw;
-    height: 100vh;
-  }
-body{
-    background-image: linear-gradient(to right bottom, #a3f4ed, #6ec7d3, #409bb7, #1c7098, #0c4674);
-    color: black;
-}
-h1{
-    font-family: "Italianno", serif;
+    font-family: var(--mainfont);
+    margin-bottom: 4rem;
 
 }
 .options-image{
@@ -34,16 +53,28 @@ h1{
     /* width: 80%; */
     height: 60%;
 }
+p{
+    font-weight: 500;
+    font-size: 1.3rem;
+    text-align: center;
+    max-width: 40vw;
+    margin-bottom: "20px";
+    margin: auto;
+    align-items: center;
+}
 .button-81 {
-  background-color: rgb(255,255,255,100);
+  background-color: rgb(255,255,255,0.3);
+  box-shadow: -8px 6px 16px 1px rgba(0,0,0,0.69);
+-webkit-box-shadow: -8px 6px 16px 1px rgba(0,0,0,0.69);
+-moz-box-shadow: -8px 6px 16px 1px rgba(0,0,0,0.69);
   border: 0 solid #e2e8f0;
-  border-radius: 1.5rem;
+  border-radius: 1.1rem;
   box-sizing: border-box;
   color: #0d172a;
   cursor: pointer;
   display: inline-block;
-  font-family: "Basier circle",-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-  font-size: 1.1rem;
+  /* font-family: var(--secondaryFont); */
+  font-size: 1.4rem;
   font-weight: 600;
   line-height: 1;
   padding: 1rem 1.6rem;
@@ -73,7 +104,7 @@ img{
 
 @media (min-width: 768px) {
   .button-81 {
-    font-size: 1.125rem;
+    /* font-size: 1.125rem; */
     padding: 1rem 2rem;
   }
 }
