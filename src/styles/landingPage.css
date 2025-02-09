@@ -10,7 +10,7 @@ html, body {
     /* overflow: hidden; */
   }
 body{
-    background-image: linear-gradient(-45deg, #7498f4, #9395eb, #23a6d5, #23d5ab);
+    /* background-image: linear-gradient(-45deg, #7498f4, #9395eb, #23a6d5, #23d5ab); */
     color: black;
     background-size: 200% 200%;
     animation: gradient 10s ease infinite;
@@ -92,11 +92,11 @@ p{
 
 }
 
-img{
+/* img{
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
+} */
 .button-81:hover {
   background-color: #1e293b;
   color: #fff;

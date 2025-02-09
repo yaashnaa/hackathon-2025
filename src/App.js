@@ -5,16 +5,18 @@ import TempPoseDetect from "./components/tempPoseDetect";
 import CaptureImage from "./components/captureImage";
 import PoseFeedback from "./components/poseFeedback";
 import { ImageProvider } from "./context/imageContext";
+import TempLandingPage from "./components/tempLandingPage";
 function App() {
   return (
     <div className="App">
+      <TempLandingPage />
       {/* 
       <LandingPage />
       <TextToSpeech /> */}
       {/* <TempPoseDetect /> */}
-      <ImageProvider>
+      {/* <ImageProvider>
         <PoseFeedback />
-      </ImageProvider>
+      </ImageProvider> */}
     </div>
   );
 }
