@@ -46,7 +46,7 @@ const PoseFeedback = () => {
         {
           role: "user",
           parts: [
-            { text: "Compare these two images. The first is correct, the second is user’s. Provide feedback." },
+            { text: "Compare these two images. The first is correct, the second is user’s. Provide feedback on the posture and mistakes on the second picture in 2 sentance ." },
             { inline_data: { mime_type: "image/png", data: correctPoseWithPrefix } },
             { inline_data: { mime_type: "image/png", data: userImageWithPrefix } },
           ],
