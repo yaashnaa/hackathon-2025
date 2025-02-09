@@ -32,18 +32,13 @@ const CanvasElement = styled.canvas`
   pointer-events: none; /* Allow clicks to pass through to the video */
 `;
 
-const VideoFeed = () => {
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captureScreenshot}) => {
   const flipCanvasRef = useRef(null); // Hidden canvas for flipping the video
   const [detector, setDetector] = useState(null);
-  const [isPoseCorrect, setIsPoseCorrect] = useState(false);
   const [currentDetection, setCurrentDetection] = useState(false);
   const [previousDetection, setPreviousDetection] = useState(false);
   const timerRef = useRef(null);
-  const captureTimerRef = useRef(null);
   const debounceDuration = 1000;
-  const captureDuration = 5000;
 
   useEffect(() => {
     if (currentDetection !== previousDetection) {
@@ -59,30 +54,6 @@ const VideoFeed = () => {
       }
     }
   }, [currentDetection, previousDetection, isPoseCorrect]);
-
-  // Effect to handle screenshot capture
-  useEffect(() => {
-    if (isPoseCorrect) {
-      captureTimerRef.current = setTimeout(() => {
-        captureScreenshot();
-      }, captureDuration);
-    } else {
-      clearTimeout(captureTimerRef.current);
-    }
-  }, [isPoseCorrect]);
-
-  const captureScreenshot = () => {
-    console.log('Capturing screenshot...');
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (canvas && video) {
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64image = dataUrl.replace(/^data:image\/png;base64,/, '');
-      console.log('Screenshot captured:', base64image);
-    }
-  }
 
   // Load the pose detection model
   useEffect(() => {
@@ -148,6 +119,7 @@ const VideoFeed = () => {
 
       if (poses.length > 0) {
         const currentPose = poses[0]?.keypoints?.slice(5);
+        console.log("Current Pose:", currentPose);
         const similarity = comparePoses(currentPose, correctPoses[0].slice(5), 0.8);
         const match = similarity > 0.8;
         setCurrentDetection(match);
@@ -159,7 +131,7 @@ const VideoFeed = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       detectPoses();
-    }, 1000 / 30);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [detector]);

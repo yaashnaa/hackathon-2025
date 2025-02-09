@@ -13,6 +13,7 @@
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "@tensorflow/tfjs-core": "^4.22.0",
     "cra-template": "1.2.0",
+    "elevenlabs": "^1.50.5",
     "framer-motion": "^12.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
