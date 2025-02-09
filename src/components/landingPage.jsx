@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import "../styles/landingPage.css";
 import "../App.css";
 import NightImage from "../assets/night-removebg-preview.png";
@@ -8,7 +9,7 @@ import MorningImg from "../assets/morning-removebg-preview.png";
 import VideoFeed from "./videoFeed";
 export default function ZenPose() {
   const [gameStarted, setGameStarted] = useState(false);
-
+  const navigate = useNavigate(); 
   return (
     <div
       style={{
@@ -35,7 +36,7 @@ export default function ZenPose() {
       </p>
       <VideoFeed />
       <div className="options">
-        <div className="button-81">
+        <div className="button-81" onClick={() => navigate("/yoga")} style={{ cursor: "pointer" }}>
           <div className="options-image">
             Morning Revival
             <div className="image-container">
