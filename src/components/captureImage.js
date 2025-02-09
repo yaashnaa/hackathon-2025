@@ -1,9 +1,14 @@
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
+import correctTree from "../assets/correctTree.jpg";
+import correctTriangle from "../assets/correctTriangle.jpg";
+import correctWarrior from "../assets/correctWarrior.jpg";
+
+// Image is being captured manually for now, replace later with screenshot function 
 
 const CaptureImage = ({ onCapture }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-
+    const [image, setImage] = useState(null);
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     videoRef.current.srcObject = stream;

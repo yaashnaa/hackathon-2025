@@ -1,7 +1,6 @@
-import { REACT_APP_API_KEY } from "../";
-
+import convertImportedImagesToBase64 from '../components/convert';
 export const sendToGemini = async (userImage) => {
-    const API_KEY = REACT_APP_API_KEY;
+    const API_KEY = process.env.REACT_APP_API_KEY;
     const correctPoseBase64 = "YOUR_CORRECT_POSE_IMAGE_BASE64"; // 🔥 Replace with correct pose image Base64
   
     const requestBody = {
