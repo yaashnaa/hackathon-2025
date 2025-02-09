@@ -9,6 +9,7 @@ import yogaPose5 from "../assets/correctsanskrit.jpg";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import "bootstrap/dist/css/bootstrap.min.css";
 import plant from "../assets/plant.png";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import timerSound from "../assets/timerSound.mp3"; // Ensure this sound file exists
 
 export default function YogaPage() {
@@ -68,11 +69,11 @@ export default function YogaPage() {
       {/* Navbar at the Top */}
       <div className="navbar">
         <button className="nav-button" onClick={() => window.history.back()}>
-          ⬅️
+          <FontAwesomeIcon icon="fa-solid fa-arrow-left" />
         </button>
         <span className="timer">{formatTime(timer)}</span>
         <button className="nav-button" onClick={() => setPaused(!paused)}>
-          {paused ? "▶️" : "⏸️"}
+          {paused ? <FontAwesomeIcon icon="fa-solid fa-play" /> : <FontAwesomeIcon icon="fa-solid fa-pause" style={{color: "#ffffff",}} />}
         </button>
       </div>
 
@@ -87,16 +88,16 @@ export default function YogaPage() {
             <div className="image-container">
               <img src={plant} alt="Decorative Plant" className="plant-image" />
             </div>
-
+            <div className="score-container">
+              <h3>Points: {points}</h3>
+            </div>
             {/* Progress Bar at the Bottom */}
             <div className="progress-bar-container">
               <ProgressBar now={progress} label={`${Math.round(progress)}%`} />
             </div>
 
-            {/* Point Score Field */}
-            <div className="score-container">
-              <h3>Points: {points}</h3>
-            </div>
+        
+         
           </div>
 
           {/* Right Section: Webcam */}

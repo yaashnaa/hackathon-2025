@@ -9,17 +9,19 @@ import TempLandingPage from "./components/tempLandingPage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import YogaPage from "./components/YogaPage"; 
-
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faPause, faPlay, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+library.add(faPause, faPlay,faArrowLeft)
 function App() {
   return (
     <Router>
     <div className="App">
 
-      <TempLandingPage />
+
 
       <Routes>
           {/* Define Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<TempLandingPage />} />
           <Route path="/yoga" element={<YogaPage />} />
       </Routes>
 
