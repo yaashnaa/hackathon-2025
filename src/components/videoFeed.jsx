@@ -5,6 +5,9 @@ import * as tf from '@tensorflow/tfjs-core';
 // Register WebGL backend.
 import '@tensorflow/tfjs-backend-webgl';
 
+import comparePoses from '../utils/comparePoses';
+import correctPoses from '../utils/constants';
+
 // Styled Components
 const VideoContainer = styled.div`
   position: relative;
@@ -34,6 +37,52 @@ const VideoFeed = () => {
   const canvasRef = useRef(null);
   const flipCanvasRef = useRef(null); // Hidden canvas for flipping the video
   const [detector, setDetector] = useState(null);
+  const [isPoseCorrect, setIsPoseCorrect] = useState(false);
+  const [currentDetection, setCurrentDetection] = useState(false);
+  const [previousDetection, setPreviousDetection] = useState(false);
+  const timerRef = useRef(null);
+  const captureTimerRef = useRef(null);
+  const debounceDuration = 1000;
+  const captureDuration = 5000;
+
+  useEffect(() => {
+    if (currentDetection !== previousDetection) {
+      setPreviousDetection(currentDetection);
+      clearTimeout(timerRef.current);
+  
+      if (currentDetection) {
+        setIsPoseCorrect(true);
+      } else {
+        timerRef.current = setTimeout(() => {
+          setIsPoseCorrect(false);
+        }, debounceDuration);
+      }
+    }
+  }, [currentDetection, previousDetection, isPoseCorrect]);
+
+  // Effect to handle screenshot capture
+  useEffect(() => {
+    if (isPoseCorrect) {
+      captureTimerRef.current = setTimeout(() => {
+        captureScreenshot();
+      }, captureDuration);
+    } else {
+      clearTimeout(captureTimerRef.current);
+    }
+  }, [isPoseCorrect]);
+
+  const captureScreenshot = () => {
+    console.log('Capturing screenshot...');
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    if (canvas && video) {
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64image = dataUrl.replace(/^data:image\/png;base64,/, '');
+      console.log('Screenshot captured:', base64image);
+    }
+  }
 
   // Load the pose detection model
   useEffect(() => {
@@ -60,30 +109,28 @@ const VideoFeed = () => {
       });
 
       video.srcObject = stream;
-      let playPromise = video.play()
+      let playPromise = video.play();
 
       if (playPromise !== undefined) {
-        playPromise.then(_ => {
+        playPromise.then(() => {
           // Automatic playback started!
           // Show playing UI.
         })
-        .catch(error => {
-          // Auto-play was prevented
-          // Show paused UI.
+          .catch((error) => {
+            // Auto-play was prevented
+            // Show paused UI.
         });
-      }
+      };
     };
 
     startVideo();
   }, []);
 
-  // Detect poses and draw keypoints on the canvas
+  // Detect poses
   const detectPoses = async () => {
     if (detector && videoRef.current && canvasRef.current && flipCanvasRef.current) {
       const video = videoRef.current;
-      const canvas = canvasRef.current;
       const flipCanvas = flipCanvasRef.current;
-      const ctx = canvas.getContext('2d');
       const flipCtx = flipCanvas.getContext('2d');
 
       // Clear the flip canvas
@@ -99,53 +146,58 @@ const VideoFeed = () => {
       // Detect poses using the flipped video
       const poses = await detector.estimatePoses(flipCanvas);
 
-      // Draw keypoints on the main canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      poses.forEach((pose) => {
-        pose.keypoints.forEach((keypoint) => {
-          if (keypoint.score > 0.5) {
-            ctx.beginPath();
-            ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
-            ctx.fillStyle = 'red';
-            ctx.fill();
-          }
-        });
-      });
+      if (poses.length > 0) {
+        const currentPose = poses[0]?.keypoints?.slice(5);
+        const similarity = comparePoses(currentPose, correctPoses[0].slice(5), 0.8);
+        const match = similarity > 0.8;
+        setCurrentDetection(match);
+        }
+      }
     }
-  };
 
   // Run pose detection at regular intervals
   useEffect(() => {
     const interval = setInterval(() => {
       detectPoses();
-    }, 100);
+    }, 1000 / 30);
 
     return () => clearInterval(interval);
   }, [detector]);
 
   return (
-    <VideoContainer>
-      <VideoElement
-        ref={videoRef}
-        width="640"
-        height="480"
-        autoPlay
-        muted
-      />
-      <CanvasElement
-        ref={canvasRef}
-        width="640"
-        height="480"
-      />
-      {/* Hidden canvas for flipping the video */}
-      <canvas
-        ref={flipCanvasRef}
-        width="640"
-        height="480"
-        style={{ display: 'none' }} // Hide the canvas
-      />
-    </VideoContainer>
+    <>
+      <VideoContainer>
+        <VideoElement
+          ref={videoRef}
+          width="640"
+          height="480"
+          autoPlay
+          muted
+        />
+        <CanvasElement
+          ref={canvasRef}
+          width="640"
+          height="480"
+        />
+        {/* Hidden canvas for flipping the video */}
+        <canvas
+          ref={flipCanvasRef}
+          width="640"
+          height="480"
+          style={{ display: 'none' }} // Hide the canvas
+        />
+      </VideoContainer>
+      <div>
+        <h2>Is the pose correct?</h2>
+
+        <p style={{ fontSize: '6rem' }}>
+          {}
+          {isPoseCorrect ? 'Yes' : 'No'}
+        </p>
+      </div>
+    </>
   );
 };
+
 
 export default VideoFeed;
