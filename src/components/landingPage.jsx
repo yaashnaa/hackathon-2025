@@ -6,6 +6,7 @@ import "../App.css";
 import NightImage from "../assets/night-removebg-preview.png";
 import HeartRate from "../assets/heartRate-removebg-preview.png";
 import MorningImg from "../assets/morning-removebg-preview.png";
+import VideoFeed from "./videoFeed";
 export default function ZenPose() {
   const [gameStarted, setGameStarted] = useState(false);
   const navigate = useNavigate(); 
@@ -33,6 +34,7 @@ export default function ZenPose() {
         <strong>one minute</strong> to earn points. The AI will track your poses
         and score you in real-time.
       </p>
+      <VideoFeed />
       <div className="options">
         <div className="button-81" onClick={() => navigate("/yoga")} style={{ cursor: "pointer" }}>
           <div className="options-image">
