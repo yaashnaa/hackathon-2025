@@ -1,72 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const TextToSpeech = () => {
+const TextToSpeechComponent = () => {
   const [text, setText] = useState("");
-  const feedback = {
-    positive: [
-      "Great job! Keep going!",
-      "You're doing amazing!",
-      "Try to focus on your breathing.",
-      "Stay balanced and centered.",
-      "You're improving with each attempt!",
-      "Keep a steady posture and relax.",
-    ],
-    negative: [
-      "Don't rush, take your time.",
-      "Try to hold your posture correctly.",
-      "Focus more on balance.",
-      "Make sure to breathe properly.",
-      "Keep your back straight to avoid strain.",
-    ],
-  };
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+
+  useEffect(() => {
+    const populateVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+      if (availableVoices.length > 0) {
+        setSelectedVoice(availableVoices[0].name);
+      }
+    };
+
+    populateVoices();
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+  }, []);
 
   const textToSpeech = () => {
     if (text.trim() === "") return;
     const speechSynthesis = window.speechSynthesis;
     const utterance = new SpeechSynthesisUtterance(text);
+
+    const voice = voices.find((v) => v.name === selectedVoice);
+    if (voice) utterance.voice = voice;
+
     speechSynthesis.speak(utterance);
   };
 
   return (
-    <>
-      <div style={{ textAlign: "center", padding: "20px" }}>
-        <h2>Text-to-Speech Converter</h2>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Enter text here..."
-          style={{
-            display: "block",
-            margin: "10px auto",
-            width: "80%",
-            height: "100px",
-          }}
-        />
-        <button onClick={textToSpeech} disabled={!text.trim()}>
-          Play Text
-        </button>
-        <h3>Suggested Feedback:</h3>
-        <div style={{ display: "flex", justifyContent: "space-around" }}>
-          <div>
-            <h4>Positive Feedback</h4>
-            <ul>
-              {feedback.positive.map((message, index) => (
-                <li key={index}>{message}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4>Negative Feedback</h4>
-            <ul>
-              {feedback.negative.map((message, index) => (
-                <li key={index}>{message}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
+    <div style={{ textAlign: "center", padding: "20px" }}>
+      <h2>Text-to-Speech Converter</h2>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Enter text here..."
+        style={{ display: "block", margin: "10px auto", width: "80%", height: "100px" }}
+      />
+      <div>
+        <label>Select Voice: </label>
+        <select value={selectedVoice} onChange={(e) => setSelectedVoice(e.target.value)}>
+          {voices.map((voice, index) => (
+            <option key={index} value={voice.name}>
+              {voice.name} ({voice.lang})
+            </option>
+          ))}
+        </select>
       </div>
-    </>
+      <button onClick={textToSpeech} disabled={!text.trim()}>
+        Play Text
+      </button>
+    </div>
   );
 };
 
-export default TextToSpeech;
+export default TextToSpeechComponent;
