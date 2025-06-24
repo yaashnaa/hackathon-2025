@@ -1,28 +1,52 @@
-import React, { useState, useEffect, useContext, useRef, use } from "react";
-import { ElevenLabsClient, play } from "elevenlabs";
-// import CaptureImage from "./captureImage";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import styled from "styled-components";
+import { ElevenLabsClient } from "elevenlabs";
 import VideoFeed from "./videoFeed";
 import { ImageContext } from "../context/imageContext";
-import styled from "styled-components";
-const PoseFeedback = () => {
-  console.log(process.env.REACT_APP_AI_VOICE_API_KEY);
-  const client = new ElevenLabsClient({
-    apiKey: process.env.REACT_APP_AI_VOICE_API_KEY,
-  });
 
+const FeedbackContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* margin-top: 2rem; */
+`;
+
+export default function PoseFeedback({
+  poseIndex = 0,
+  onFeedbackComplete,
+  hasMatched,
+  onPauseTimer,
+  onResumeTimer,
+  onSimilarityUpdate,
+}) {
+  const [lockedReference, setLockedReference] = useState(null);
   const { correctPoseImages } = useContext(ImageContext);
+  const [referenceBase64, setReferenceBase64] = useState(null);
   const [feedback, setFeedback] = useState("");
-  // const [userImage, setUserImage] = useState(null);
   const [isPoseCorrect, setIsPoseCorrect] = useState(false);
-  const [aiRecording, setAiRecording] = useState(null);
-
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
   const captureTimerRef = useRef(null);
+  const canvasRef = useRef(null);
+  const videoRef = useRef(null);
   const captureDuration = 1000;
+  const [showModal, setShowModal] = useState(false);
+  const [userScreenshot, setUserScreenshot] = useState(null);
+  const [lockedPoseIndex, setLockedPoseIndex] = useState(poseIndex);
 
-  // Effect to handle screenshot capture
+  const [similarityScore, setSimilarityScore] = useState(0);
+
+  // const client = new ElevenLabsClient({
+  //   apiKey: process.env.REACT_APP_AI_VOICE_API_KEY,
+  // });
+  useEffect(() => {
+    setFeedback("");
+  }, [poseIndex]);
+
+  useEffect(() => {
+    if (correctPoseImages.length > 0) {
+      setReferenceBase64(correctPoseImages[poseIndex]);
+    }
+  }, [correctPoseImages, poseIndex]);
+
   useEffect(() => {
     if (isPoseCorrect) {
       captureTimerRef.current = setTimeout(() => {
@@ -33,75 +57,88 @@ const PoseFeedback = () => {
     }
   }, [isPoseCorrect]);
 
+  // useEffect(() => {
+  //   if (feedback) {
+  //     handleTextRead(feedback);
+  //   }
+  // }, [feedback]);
+
+  //   useEffect(() => {
+  //     if (aiRecording) {
+  //  const audio = new Audio(aiRecording);
+  // audio.play();
+  //     }
+  //   }, [aiRecording]);
+
   const captureScreenshot = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    if (canvas && video) {
-      const context = canvas.getContext('2d');
-      context.save();
-      context.scale(-1, 1);
-      context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64image = dataUrl.replace(/^data:image\/png;base64,/, '');
+    if (!canvas || !video || showModal) return;
 
-      // setUserImage(base64image);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
 
-      sendToGemini(base64image);
-    }
-  }
+    const dataUrl = canvas.toDataURL("image/png");
+    const base64image = dataUrl.replace(/^data:image\/png;base64,/, "");
+    console.log("🖼️ Captured screenshot, sending:", {
+      poseIndex,
+      lockedPoseIndex,
+      referenceBase64,
+      base64image: base64image.slice(0, 50) + "…", // just to confirm it’s non-empty
+    });
 
-  
-//   const handleImageCapture = (imageBase64) => {
-//     console.log("✅ Image captured:", imageBase64);
-//     setUserImage(imageBase64); // Store captured image in state
-//   };
-// //   console.log("User Image (raw):", userImage);
-//   console.log("Correct Pose (raw):", correctPoseImages[0]);
-// //   console.log("Correct Pose Array:", correctPoseImages);
+    // lock both poseIndex and the exact reference you’re using
+    setLockedPoseIndex(poseIndex);
+    setLockedReference(referenceBase64);
 
+    setUserScreenshot(dataUrl);
+    sendToGemini(base64image);
+
+    setShowModal(true);
+    onPauseTimer?.();
+  };
+
+  // const handleTextRead = async (text) => {
+  //   const audio = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
+  //     text: text,
+  //     model_id: "eleven_multilingual_v2",
+  //     output_format: "mp3_44100_128",
+  //   });
+  //   setAiRecording(audio);
+  // };
 
   const sendToGemini = async (userImage) => {
-    if (!userImage || correctPoseImages.length === 0) {
-      console.error("❌ No user image captured or no correct pose images");
+    if (!userImage || !referenceBase64) {
+      console.error("❌ Missing user or reference image.");
       return;
     }
-
+    if (hasMatched) return;
     const prompt = `
-    You are a very encouraging yoga instructor. You are teaching a yoga class and
-    your student is trying to do a yoga pose. The first image is the reference of
-    the yoga pose, and the second image is the student. Ignoring everything except
-    for the form of the figures in each of the images, compare the student's form
-    to the reference pose. Give the student some encouraging feedback on if they are
-    posing correctly, or what they can do differently if they are not matching
-    the reference pose. Keep your feedback concise and limit yourself to a maximum
-    of 3 sentences.
-    `
-  
+      You are a very encouraging yoga instructor. You are teaching a yoga class and
+      your student is trying to do a yoga pose. The first image is the reference of
+      the yoga pose, and the second image is the student. Ignoring everything except
+      for the form of the figures in each of the images, compare the student's form
+      to the reference pose. Give the student some encouraging feedback on if they are
+      posing correctly, or what they can do differently if they are not matching
+      the reference pose. Keep your feedback concise and limit yourself to a maximum
+      of 3 sentences.
+    `;
+
     const API_KEY = process.env.REACT_APP_API_KEY;
-    // For example, pick the first correct pose
-    
-    const rawCorrectPose = correctPoseImages[0];    // e.g. "/9j/4AAQ..."
-    const rawUserImage = userImage;                 // e.g. "iVBORw0K..."
-  
-    // Re-add prefix if needed
-    // const correctPoseWithPrefix = `data:image/png;base64,${rawCorrectPose}`;
-    // const userImageWithPrefix = `data:image/png;base64,${rawUserImage}`;
-    const correctPoseWithPrefix = `${rawCorrectPose}`;
-    const userImageWithPrefix = `${rawUserImage}`;
-  
-    // console.log("🔎 final correct pose:", correctPoseWithPrefix.slice(0,100)); // partial log
-    // console.log("🔎 final user image:", userImageWithPrefix.slice(0,100));
-    // console.log("🕵️ Checking final correct pose:", rawCorrectPose.slice(0, 50));
-    // console.log("🕵️ Checking final user image:", rawUserImage.slice(0, 50));
-    
+
     const requestBody = {
       contents: [
         {
           role: "user",
           parts: [
             { text: prompt },
-            { inline_data: { mime_type: "image/png", data: correctPoseWithPrefix } },
-            { inline_data: { mime_type: "image/png", data: userImageWithPrefix } },
+            { inline_data: { mime_type: "image/png", data: referenceBase64 } },
+            { inline_data: { mime_type: "image/png", data: userImage } },
           ],
         },
       ],
@@ -116,65 +153,76 @@ const PoseFeedback = () => {
           body: JSON.stringify(requestBody),
         }
       );
-  
+
       const data = await response.json();
-      console.log("✅ Gemini API Response:", data);
-  
-      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error("No valid response from Gemini.");
+      const feedbackText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      console.log("✅ Gemini Response:", data);
+      if (!feedbackText) {
+        console.warn("No valid feedback returned.");
+        setFeedback("Couldn't generate feedback.");
+        return;
       }
-  
-      setFeedback(data.candidates[0].content.parts[0].text);
-    } catch (error) {
-      console.error("❌ Error sending image to Gemini:", error);
-      setFeedback("Error fetching feedback from Gemini.");
+
+      setFeedback(feedbackText);
+
+      // ✅ Notify YogaPage to update pose
+      // if (typeof onFeedbackComplete === "function") {
+      //   onFeedbackComplete();
+      // }
+    } catch (err) {
+      console.error("❌ Gemini error:", err);
+      setFeedback("Error retrieving feedback.");
     }
   };
 
-  useEffect(() => {
-    if (feedback) {
-      handleTextRead(feedback);
-    }
-  }, [feedback]);
-
-  useEffect(() => {
-    if (aiRecording) {
-      play(aiRecording);
-    }
-  }, [aiRecording]);
-
-  const handleTextRead = async (text) => {
-    const audio = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
-      text: text,
-      model_id: "eleven_multilingual_v2",
-      output_format: "mp3_44100_128",
-    })
-    setAiRecording(audio);
-  }
-  
   return (
-    <div>
-      <h2>Pose Feedback</h2>
-      {/* <CaptureImage onCapture={handleImageCapture} /> */}
-      <FeedbackContainer>
-        <VideoFeed
-          isPoseCorrect={isPoseCorrect}
-          setIsPoseCorrect={setIsPoseCorrect}
-          videoRef={videoRef}
-          canvasRef={canvasRef}
-          captureScreenshot={captureScreenshot}
-        />
-        <p>{feedback}</p>
-      </FeedbackContainer>
-    </div>
+    <FeedbackContainer>
+      <VideoFeed
+        isPoseCorrect={isPoseCorrect}
+        setIsPoseCorrect={setIsPoseCorrect}
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        poseIndex={poseIndex}
+        captureScreenshot={captureScreenshot}
+        onSimilarityUpdate={(score) => {
+          setSimilarityScore(score); 
+          onSimilarityUpdate?.(score); 
+        }}
+      />
+      {showModal && (
+        <div className="pose-modal">
+          <div className="modal-content">
+            <h2>Nice pose! Here's your feedback</h2>
+            <div className="modal-images">
+              <div>
+                <h4>Reference</h4>
+                <img
+                  alt="Reference Pose"
+                  src={`data:image/png;base64,${referenceBase64}`}
+                />
+              </div>
+              <div>
+                <h4>Your Pose</h4>
+                <img src={userScreenshot} alt="Your pose" />
+              </div>
+            </div>
+            {feedback ? (
+              <p>{feedback}</p>
+            ) : (
+              <p className="muted">Hold your pose...</p>
+            )}
+            <button
+              onClick={() => {
+                setShowModal(false);
+                onResumeTimer?.();
+                onFeedbackComplete?.(); // advance to next pose
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </FeedbackContainer>
   );
-};
-
-const FeedbackContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin: 2rem;
-`
-
-export default PoseFeedback;
+}

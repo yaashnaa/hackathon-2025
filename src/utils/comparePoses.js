@@ -56,10 +56,10 @@ return angle * (180 / Math.PI);
  * @param {Object} options - Configuration options
  * @returns {number} Similarity score between 0 and 1
  */
-function computePoseSimilarity(currentPose, referencePose, {
-angleWeight = 0.6,
-distanceWeight = 0.4,
-confidenceThreshold = 0.3
+export function computePoseSimilarity(currentPose, referencePose, {
+angleWeight = 0.7,
+distanceWeight = 0.2,
+confidenceThreshold = 0.8
 } = {}) {
 const current = normalizePose(currentPose);
 const reference = normalizePose(referencePose);

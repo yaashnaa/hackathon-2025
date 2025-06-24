@@ -1,20 +1,72 @@
-import { useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
-import * as poseDetection from '@tensorflow-models/pose-detection';
-import * as tf from '@tensorflow/tfjs-core';
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import * as poseDetection from "@tensorflow-models/pose-detection";
+import * as tf from "@tensorflow/tfjs-core";
 // Register WebGL backend.
-import '@tensorflow/tfjs-backend-webgl';
+import "@tensorflow/tfjs-backend-webgl";
+import { computePoseSimilarity } from "../utils/comparePoses";
 
-import comparePoses from '../utils/comparePoses';
-import correctPoses from '../utils/constants';
+
+import comparePoses from "../utils/comparePoses";
+import correctPoses from "../utils/constants";
+function calculateAngle(p1, p2, p3) {
+  const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+  const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+  const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+
+  const angleRad = Math.acos(dot / (mag1 * mag2));
+  return angleRad * (180 / Math.PI);
+}
 
 // Styled Components
+function drawAngles(ctx, keypoints) {
+  const angleTriplets = [
+    ["left_hip", "left_knee", "left_ankle"],
+    ["right_hip", "right_knee", "right_ankle"],
+    ["left_shoulder", "left_elbow", "left_wrist"],
+    ["right_shoulder", "right_elbow", "right_wrist"],
+  ];
+
+  angleTriplets.forEach(([p1, p2, p3]) => {
+    const pt1 = keypoints.find((k) => k.name === p1);
+    const pt2 = keypoints.find((k) => k.name === p2);
+    const pt3 = keypoints.find((k) => k.name === p3);
+
+    if (
+      pt1 &&
+      pt2 &&
+      pt3 &&
+      pt1.score > 0.5 &&
+      pt2.score > 0.5 &&
+      pt3.score > 0.5
+    ) {
+      const angle = calculateAngle(pt1, pt2, pt3);
+
+      // Draw lines
+      ctx.strokeStyle = "lime";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pt1.x, pt1.y);
+      ctx.lineTo(pt2.x, pt2.y);
+      ctx.lineTo(pt3.x, pt3.y);
+      ctx.stroke();
+
+      // Draw angle text
+      ctx.fillStyle = "yellow";
+      ctx.font = "14px Arial";
+      ctx.fillText(`${Math.round(angle)}°`, pt2.x + 5, pt2.y - 5);
+    }
+  });
+}
+
 const VideoContainer = styled.div`
   position: relative;
   width: 640px;
-  height: 480px;
-  border: 2px solid #000; /* Optional: Add a border */
-  background: #333; /* Optional: Add a background color */
+  height: 500px;
+
 `;
 
 const VideoElement = styled.video`
@@ -32,7 +84,15 @@ const CanvasElement = styled.canvas`
   pointer-events: none; /* Allow clicks to pass through to the video */
 `;
 
-const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captureScreenshot}) => {
+const VideoFeed = ({
+  isPoseCorrect,
+  setIsPoseCorrect,
+  videoRef,
+  canvasRef,
+  poseIndex,
+  captureScreenshot,
+  onSimilarityUpdate,
+}) => {
   const flipCanvasRef = useRef(null); // Hidden canvas for flipping the video
   const [detector, setDetector] = useState(null);
   const [currentDetection, setCurrentDetection] = useState(false);
@@ -44,7 +104,7 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
     if (currentDetection !== previousDetection) {
       setPreviousDetection(currentDetection);
       clearTimeout(timerRef.current);
-  
+
       if (currentDetection) {
         setIsPoseCorrect(true);
       } else {
@@ -58,12 +118,15 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
   // Load the pose detection model
   useEffect(() => {
     const loadModel = async () => {
-      await tf.setBackend('webgl');
+      await tf.setBackend("webgl");
       const model = poseDetection.SupportedModels.MoveNet;
       const detectorConfig = {
-        runtime: 'mediapipe'
+        runtime: "mediapipe",
       };
-      const detector = await poseDetection.createDetector(model, detectorConfig);
+      const detector = await poseDetection.createDetector(
+        model,
+        detectorConfig
+      );
       setDetector(detector);
     };
 
@@ -83,15 +146,16 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
       let playPromise = video.play();
 
       if (playPromise !== undefined) {
-        playPromise.then(() => {
-          // Automatic playback started!
-          // Show playing UI.
-        })
+        playPromise
+          .then(() => {
+            // Automatic playback started!
+            // Show playing UI.
+          })
           .catch((error) => {
             // Auto-play was prevented
             // Show paused UI.
-        });
-      };
+          });
+      }
     };
 
     startVideo();
@@ -99,10 +163,15 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
 
   // Detect poses
   const detectPoses = async () => {
-    if (detector && videoRef.current && canvasRef.current && flipCanvasRef.current) {
+    if (
+      detector &&
+      videoRef.current &&
+      canvasRef.current &&
+      flipCanvasRef.current
+    ) {
       const video = videoRef.current;
       const flipCanvas = flipCanvasRef.current;
-      const flipCtx = flipCanvas.getContext('2d');
+      const flipCtx = flipCanvas.getContext("2d");
 
       // Clear the flip canvas
       flipCtx.clearRect(0, 0, flipCanvas.width, flipCanvas.height);
@@ -119,13 +188,35 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
 
       if (poses.length > 0) {
         const currentPose = poses[0]?.keypoints?.slice(5);
+        const drawCtx = canvasRef.current.getContext("2d");
+        drawCtx.clearRect(
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+        drawAngles(drawCtx, poses[0].keypoints); // 👈 draw over canvas
+
         console.log("Current Pose:", currentPose);
-        const similarity = comparePoses(currentPose, correctPoses[0].slice(5), 0.8);
-        const match = similarity > 0.8;
+        console.log("🧍 Detected poses:", poses);
+        const referencePose = correctPoses[poseIndex];
+
+        const similarity = computePoseSimilarity(currentPose, referencePose, {
+          angleWeight: 0.8,
+          distanceWeight: 0.4,
+        });
+        console.log("📊 Similarity Score:", similarity);
+        onSimilarityUpdate?.(similarity); // for progress bar
+        setCurrentDetection(similarity >= 0.85); // to mark pose as correct
+
+        const match = similarity > 0.85;
         setCurrentDetection(match);
-        }
+        onSimilarityUpdate?.(similarity);
+        console.log("📏 Similarity score:", similarity);
+        console.log("✅ Pose match:", match);
       }
     }
+  };
 
   // Run pose detection at regular intervals
   useEffect(() => {
@@ -139,37 +230,26 @@ const VideoFeed = ({isPoseCorrect, setIsPoseCorrect, videoRef, canvasRef, captur
   return (
     <>
       <VideoContainer>
-        <VideoElement
-          ref={videoRef}
-          width="640"
-          height="480"
-          autoPlay
-          muted
-        />
-        <CanvasElement
-          ref={canvasRef}
-          width="640"
-          height="480"
-        />
-        {/* Hidden canvas for flipping the video */}
+        <VideoElement ref={videoRef} width="640" height="480" autoPlay muted />
+        <CanvasElement ref={canvasRef} width="640" height="480" />
+     
         <canvas
           ref={flipCanvasRef}
           width="640"
           height="480"
-          style={{ display: 'none' }} // Hide the canvas
+          style={{ display: "none" }} // Hide the canvas
         />
       </VideoContainer>
-      <div>
+      {/* <div>
         <h2>Is the pose correct?</h2>
 
-        <p style={{ fontSize: '6rem' }}>
+        <p style={{ fontSize: "6rem" }}>
           {}
-          {isPoseCorrect ? 'Yes' : 'No'}
+          {isPoseCorrect ? "Yes" : "No"}
         </p>
-      </div>
+      </div> */}
     </>
   );
 };
-
 
 export default VideoFeed;
