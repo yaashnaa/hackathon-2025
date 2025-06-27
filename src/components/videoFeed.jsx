@@ -6,7 +6,6 @@ import * as tf from "@tensorflow/tfjs-core";
 import "@tensorflow/tfjs-backend-webgl";
 import { computePoseSimilarity } from "../utils/comparePoses";
 
-
 import comparePoses from "../utils/comparePoses";
 import correctPoses from "../utils/constants";
 function calculateAngle(p1, p2, p3) {
@@ -66,7 +65,6 @@ const VideoContainer = styled.div`
   position: relative;
   width: 640px;
   height: 500px;
-
 `;
 
 const VideoElement = styled.video`
@@ -99,6 +97,7 @@ const VideoFeed = ({
   const [previousDetection, setPreviousDetection] = useState(false);
   const timerRef = useRef(null);
   const debounceDuration = 1000;
+  const matchHistoryRef = useRef([]);
 
   useEffect(() => {
     if (currentDetection !== previousDetection) {
@@ -173,19 +172,16 @@ const VideoFeed = ({
       const flipCanvas = flipCanvasRef.current;
       const flipCtx = flipCanvas.getContext("2d");
 
-      // Clear the flip canvas
+      // Clear and flip canvas
       flipCtx.clearRect(0, 0, flipCanvas.width, flipCanvas.height);
-
-      // Draw the flipped video onto the hidden canvas
       flipCtx.save();
-      flipCtx.scale(-1, 1); // Flip horizontally
-      flipCtx.translate(-flipCanvas.width, 0); // Move the canvas back into view
+      flipCtx.scale(-1, 1);
+      flipCtx.translate(-flipCanvas.width, 0);
       flipCtx.drawImage(video, 0, 0, flipCanvas.width, flipCanvas.height);
       flipCtx.restore();
 
-      // Detect poses using the flipped video
+      // Detect poses
       const poses = await detector.estimatePoses(flipCanvas);
-
       if (poses.length > 0) {
         const currentPose = poses[0]?.keypoints?.slice(5);
         const drawCtx = canvasRef.current.getContext("2d");
@@ -195,25 +191,39 @@ const VideoFeed = ({
           canvasRef.current.width,
           canvasRef.current.height
         );
-        drawAngles(drawCtx, poses[0].keypoints); // 👈 draw over canvas
+        drawAngles(drawCtx, poses[0].keypoints);
 
-        console.log("Current Pose:", currentPose);
-        console.log("🧍 Detected poses:", poses);
         const referencePose = correctPoses[poseIndex];
-
         const similarity = computePoseSimilarity(currentPose, referencePose, {
           angleWeight: 0.8,
           distanceWeight: 0.4,
+          confidenceThreshold: 0.7,
         });
+        console.log("Current Pose:", currentPose);
+        console.log("🧍 Detected poses:", poses);
         console.log("📊 Similarity Score:", similarity);
-        onSimilarityUpdate?.(similarity); // for progress bar
-        setCurrentDetection(similarity >= 0.85); // to mark pose as correct
-
-        const match = similarity > 0.85;
-        setCurrentDetection(match);
         onSimilarityUpdate?.(similarity);
-        console.log("📏 Similarity score:", similarity);
-        console.log("✅ Pose match:", match);
+        const keypoints = poses[0].keypoints;
+        console.log("🔍 Keypoints:", keypoints);
+        const match = similarity >= 0.73;
+
+        // Pose hold smoothing logic
+        const now = Date.now();
+        matchHistoryRef.current.push({ time: now, match });
+
+        // Keep only matches within the last 1500ms
+        matchHistoryRef.current = matchHistoryRef.current.filter(
+          (entry) => now - entry.time < 1500
+        );
+
+        const recentValid = matchHistoryRef.current.filter(
+          (entry) => entry.match
+        );
+
+        const isMatchStable = recentValid.length >= 2;
+        setCurrentDetection(isMatchStable);
+
+        console.log("✅ Pose match (stable):", isMatchStable);
       }
     }
   };
@@ -232,7 +242,7 @@ const VideoFeed = ({
       <VideoContainer>
         <VideoElement ref={videoRef} width="640" height="480" autoPlay muted />
         <CanvasElement ref={canvasRef} width="640" height="480" />
-     
+
         <canvas
           ref={flipCanvasRef}
           width="640"

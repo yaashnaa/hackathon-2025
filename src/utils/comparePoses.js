@@ -57,9 +57,9 @@ return angle * (180 / Math.PI);
  * @returns {number} Similarity score between 0 and 1
  */
 export function computePoseSimilarity(currentPose, referencePose, {
-angleWeight = 0.7,
+angleWeight = 0.6,
 distanceWeight = 0.2,
-confidenceThreshold = 0.8
+confidenceThreshold = 0.75
 } = {}) {
 const current = normalizePose(currentPose);
 const reference = normalizePose(referencePose);
@@ -141,7 +141,7 @@ return (angleWeight * angleSimilarity +
  * @param {number} threshold - Similarity threshold (0 to 1)
  * @returns {boolean} Whether pose is correct
  */
-function comparePoses(currentPose, referencePose, threshold = 0.8) {
+function comparePoses(currentPose, referencePose, threshold = 0.7) {
 const similarity = computePoseSimilarity(currentPose, referencePose);
 return similarity >= threshold;
 }

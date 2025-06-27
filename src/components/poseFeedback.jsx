@@ -119,7 +119,7 @@ export default function PoseFeedback({
     }
     if (hasMatched) return;
     const prompt = `
-      You are a very encouraging yoga instructor. You are teaching a yoga class and
+      You are a encouraging yoga instructor. You are teaching a yoga class and
       your student is trying to do a yoga pose. The first image is the reference of
       the yoga pose, and the second image is the student. Ignoring everything except
       for the form of the figures in each of the images, compare the student's form
