@@ -1,70 +1,93 @@
-# Getting Started with Create React App
+# 🧘‍♀️ ZenPose  
+**A smarter way to do yoga — with real-time AI feedback**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Built at **HackNYU 2025**  
+🏆 Winner — *Interactive Media Track*  
+🎤 Presented at the **MLH AI Roadshow NYC**
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🌱 Why ZenPose?
 
-### `npm start`
+Zoom workouts and online yoga are everywhere — but without real-time feedback, small misalignments can lead to long-term injuries.  
+We asked: *What if AI could guide your form like a yoga coach?*
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 💡 What It Does
 
-### `npm test`
+ZenPose is a web app that helps users practice yoga safely by:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- 🧍 Detecting your pose using **BlazePose**
+- 📈 Showing real-time pose progress with a visual bar
+- 📸 Capturing a screenshot when your form is correct
+- 💬 Using the **Gemini API** to give instant, personalized feedback
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## ⚙️ How It Works
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Pose Detection** – BlazePose tracks body joints  
+2. **Pose Evaluation** – Angles compared relative to the hips  
+3. **Stability Buffer** – Only scores when you're steady  
+4. **AI Feedback** – Gemini analyzes and gives encouragement or corrections  
+5. **Gamification** – Earn points and insights as you move
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🛠 Tech Stack
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- **BlazePose** – Pose detection  
+- **React Native** – Frontend  
+- **Gemini API** – Feedback generation  
+- **Custom Math** – Relative angle detection & smoothing logic  
+- **AI + UX** – Built for clarity and inclusivity
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🧗 Challenges We Faced
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Pose misclassification due to user differences  
+- Inaccurate results with fixed position models
 
-## Learn More
+**Our solutions:**
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Anchored poses to hip position  
+- Used **relative** angles instead of absolute coordinates  
+- Added buffer logic to reduce flickering  
+- Designed for better **accessibility** and real-world accuracy
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 🧠 What We Learned
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- None of us had AI experience going in — and that’s the magic of it!  
+- AI helped us prototype, debug, and dream faster  
+- We even used AI to generate reference pose data  
+- Tech should amplify creativity — not replace it
 
-### Analyzing the Bundle Size
+> “AI helped us turn vague ideas into working features — in just 24 hours.”
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 🚀 What’s Next?
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Add more yoga poses  
+- Allow custom routines  
+- Track user progress over time  
+- Introduce **real-time voice coaching**
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🎉 Team ZenPose
 
-### Deployment
+- **Yaashna Gupta** – [LinkedIn](https://www.linkedin.com/in/yaashna-gupta)  
+- **Jennifer Zhu** – [LinkedIn](https://www.linkedin.com/in/jenniferz2004/)  
+- **Russel Sy** – [LinkedIn](https://www.linkedin.com/in/russel-sy/)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+> You don’t need to be an expert to build something real.  
+> With teamwork, the right tools, and a little courage — anyone can create something beautiful.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
